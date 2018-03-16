@@ -18,7 +18,11 @@ config = {
                     'x_px':300,
                     'y_px':200,
                 }
-            ]
+            ],
+            'op': {
+                'name': 'ocr',
+                'resource': 'resource/num/',
+            }
         }
     ]
 }
