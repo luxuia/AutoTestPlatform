@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys
+import sys, os
 
 #PYQT5 PyQt4’s QtGui module has been split into PyQt5’s QtGui, QtPrintSupport and QtWidgets modules
 
@@ -15,6 +15,11 @@ from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 
 from ext import *
+from highlighter import Highlighter
+
+sys.path.insert(0, '../lib/screenshot/src')
+
+from screenshot import ScreenShootWindow
 
 class Main(QtWidgets.QMainWindow):
 
@@ -104,15 +109,10 @@ class Main(QtWidgets.QMainWindow):
         imageAction.setShortcut("Ctrl+Shift+I")
         imageAction.triggered.connect(self.insertImage)
 
-        bulletAction = QtWidgets.QAction(QtGui.QIcon("icons/bullet.png"),"Insert bullet List",self)
-        bulletAction.setStatusTip("Insert bullet list")
-        bulletAction.setShortcut("Ctrl+Shift+B")
-        bulletAction.triggered.connect(self.bulletList)
-
-        numberedAction = QtWidgets.QAction(QtGui.QIcon("icons/number.png"),"Insert numbered List",self)
-        numberedAction.setStatusTip("Insert numbered list")
-        numberedAction.setShortcut("Ctrl+Shift+L")
-        numberedAction.triggered.connect(self.numberList)
+        snapAction = QtWidgets.QAction(QtGui.QIcon('icons/image.png'), 'Snap Screen', self)
+        snapAction.setStatusTip('Snap Screen')
+        snapAction.setShortcut("Ctrl+Shift+S")
+        snapAction.triggered.connect(self.snapWindow)
 
         self.toolbar = self.addToolBar("Options")
 
@@ -140,11 +140,7 @@ class Main(QtWidgets.QMainWindow):
         self.toolbar.addAction(wordCountAction)
         self.toolbar.addAction(tableAction)
         self.toolbar.addAction(imageAction)
-
-        self.toolbar.addSeparator()
-
-        self.toolbar.addAction(bulletAction)
-        self.toolbar.addAction(numberedAction)
+        self.toolbar.addAction(snapAction)
 
         self.addToolBarBreak()
 
@@ -300,6 +296,8 @@ class Main(QtWidgets.QMainWindow):
         self.text.customContextMenuRequested.connect(self.context)
 
         self.text.textChanged.connect(self.changed)
+
+        self.highlighter = Highlighter(self.text.document())
 
         self.setGeometry(100,100,1030,800)
         self.setWindowTitle("Writer")
@@ -554,8 +552,8 @@ class Main(QtWidgets.QMainWindow):
 
             # We just store the contents of the text file along with the
             # format in html, which Qt does in a very nice way for us
-            with open(self.filename,"wt") as file:
-                file.write(self.text.toHtml())
+            with open(self.filename,"wt", encoding='utf8') as file:
+                file.write( self.text.toHtml() )
 
             self.changesSaved = True
 
@@ -621,6 +619,11 @@ class Main(QtWidgets.QMainWindow):
                 cursor = self.text.textCursor()
 
                 cursor.insertImage(image,filename)
+
+    def snapWindow(self):
+        print('snapWindow')
+        self.snap = ScreenShootWindow()
+        self.snap.showFullScreen()
 
     def fontColorChanged(self):
 
@@ -805,21 +808,6 @@ class Main(QtWidgets.QMainWindow):
 
         else:
             self.handleDedent(cursor)
-
-
-    def bulletList(self):
-
-        cursor = self.text.textCursor()
-
-        # Insert bulleted list
-        cursor.insertList(QtGui.QTextListFormat.ListDisc)
-
-    def numberList(self):
-
-        cursor = self.text.textCursor()
-
-        # Insert list with numbers
-        cursor.insertList(QtGui.QTextListFormat.ListDecimal)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

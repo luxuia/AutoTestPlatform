@@ -1,6 +1,6 @@
 [submodule "lib/pywinauto"]
 	path = lib/pywinauto
 	url = git@github.com:pywinauto/pywinauto.git
-[submodule "lib/appJar"]
-	path = lib/appJar
-	url = git@github.com:jarvisteach/appJar.git
+[submodule "lib/screenshot"]
+	path = lib/screenshot
+	url = https://github.com/SeptemberHX/screenshot.git
