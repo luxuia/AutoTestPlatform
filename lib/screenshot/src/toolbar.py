@@ -1,6 +1,6 @@
 from PyQt5.Qt import *
 from sys import argv
-from constant import *
+from .constant import *
 from PyQt5.QtCore import QObject, pyqtSignal
 
 class MyToolBar(QWidget):
@@ -24,32 +24,32 @@ class MyToolBar(QWidget):
     def initDrawButtons(self):
         # draw action buttons
         self.rectButton = QPushButton(self)
-        self.rectButton.setIcon(QIcon("../icons/rect.png"))
+        self.rectButton.setIcon(QIcon("icons/rect.png"))
         self.rectButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.rectButton.setCheckable(True)
 
         self.ellipseButton = QPushButton(self)
-        self.ellipseButton.setIcon(QIcon("../icons/ellipse.png"))
+        self.ellipseButton.setIcon(QIcon("icons/ellipse.png"))
         self.ellipseButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.ellipseButton.setCheckable(True)
 
         self.arrowButton = QPushButton(self)
-        self.arrowButton.setIcon(QIcon("../icons/arrow.png"))
+        self.arrowButton.setIcon(QIcon("icons/arrow.png"))
         self.arrowButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.arrowButton.setCheckable(True)
 
         self.lineButton = QPushButton(self)
-        self.lineButton.setIcon(QIcon("../icons/line.png"))
+        self.lineButton.setIcon(QIcon("icons/line.png"))
         self.lineButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.lineButton.setCheckable(True)
 
         self.freePenButton = QPushButton(self)
-        self.freePenButton.setIcon(QIcon("../icons/pen.png"))
+        self.freePenButton.setIcon(QIcon("icons/pen.png"))
         self.freePenButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.freePenButton.setCheckable(True)
 
         self.textButton = QPushButton(self)
-        self.textButton.setIcon(QIcon("../icons/text.png"))
+        self.textButton.setIcon(QIcon("icons/text.png"))
         self.textButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.textButton.setCheckable(True)
 
@@ -79,12 +79,12 @@ class MyToolBar(QWidget):
         self.separator1.setFrameShadow(QFrame.Sunken)
 
         self.undoButton = QPushButton(self)
-        self.undoButton.setIcon(QIcon("../icons/undo.png"))
+        self.undoButton.setIcon(QIcon("icons/undo.png"))
         self.undoButton.setFixedSize(self.iconWidth, self.iconWidth)
         self.undoButton.clicked.connect(self.otherButtonsClicked)
 
         self.saveButton = QPushButton(self)
-        self.saveButton.setIcon(QIcon("../icons/save.png"))
+        self.saveButton.setIcon(QIcon("icons/save.png"))
         self.saveButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.saveButton.clicked.connect(self.otherButtonsClicked)
 
@@ -93,12 +93,12 @@ class MyToolBar(QWidget):
         self.separator2.setFrameShadow(QFrame.Sunken)
 
         self.cancelButton = QPushButton(self)
-        self.cancelButton.setIcon(QIcon("../icons/close.png"))
+        self.cancelButton.setIcon(QIcon("icons/close.png"))
         self.cancelButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.cancelButton.clicked.connect(self.otherButtonsClicked)
 
         self.okButton = QPushButton(self)
-        self.okButton.setIcon(QIcon("../icons/check.png"))
+        self.okButton.setIcon(QIcon("icons/check.png"))
         self.okButton.setFixedSize(self.iconWidth, self.iconHeight)
         self.okButton.clicked.connect(self.otherButtonsClicked)
 

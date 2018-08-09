@@ -14,12 +14,12 @@ from PyQt5 import QtPrintSupport
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 
-from ext import *
-from highlighter import Highlighter
+from .ext import *
 
-sys.path.insert(0, '../lib/screenshot/src')
+from lib.screenshot.src.screenshot import ScreenShootWindow
+from .highlighter import Highlighter
 
-from screenshot import ScreenShootWindow
+import uuid
 
 class Main(QtWidgets.QMainWindow):
 
@@ -537,6 +537,22 @@ class Main(QtWidgets.QMainWindow):
             with open(self.filename,"rt") as file:
                 self.text.setText(file.read())
 
+    def dump_script_text(self):
+        result = ""
+        it = self.text.document().firstBlock().begin()
+        while not it.atEnd():
+            fragment = it.fragment()
+            charformat = fragment.charFormat()
+
+            if charformat.isImageFormat():
+                charformat = charformat.toImageFormat()
+                result += "{ img:'%s'}" % charformat.name()
+            else:
+                result += fragment.text()
+            it += 1
+        return result
+
+
     def save(self):
 
         # Only open dialog if there is no filename yet
@@ -553,7 +569,10 @@ class Main(QtWidgets.QMainWindow):
             # We just store the contents of the text file along with the
             # format in html, which Qt does in a very nice way for us
             with open(self.filename,"wt", encoding='utf8') as file:
-                file.write( self.text.toHtml() )
+                file.write( self.text.toPlainText() )
+
+            with open(self.filename + '.py', "wt", encoding='utf8') as file:
+                file.write( self.dump_script_text() )
 
             self.changesSaved = True
 
@@ -621,9 +640,20 @@ class Main(QtWidgets.QMainWindow):
                 cursor.insertImage(image,filename)
 
     def snapWindow(self):
-        print('snapWindow')
         self.snap = ScreenShootWindow()
-        self.snap.showFullScreen()
+
+        def _addImage(image):
+            if not image.isNull():
+                suffix = 'png'
+                name = str(uuid.uuid4()) + '.' + suffix
+
+                image.save(name, suffix, 10)
+
+                cursor = self.text.textCursor()
+                cursor.insertImage(image, name)
+
+        self.snap.setSuccCallback(_addImage)
+        self.snap.show()
 
     def fontColorChanged(self):
 

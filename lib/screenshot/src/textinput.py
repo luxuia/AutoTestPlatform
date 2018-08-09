@@ -1,7 +1,7 @@
 from PyQt5.Qt import *
 from PyQt5.QtCore import QObject, pyqtSignal
 from sys import argv
-from constant import *
+from .constant import *
 
 class TextInput(QWidget):
     # used when input text

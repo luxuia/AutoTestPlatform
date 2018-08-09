@@ -5,10 +5,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import sys
 
-from constant import *
-from toolbar import *
-from colorbar import *
-from textinput import *
+from .constant import *
+from .toolbar import *
+from .colorbar import *
+from .textinput import *
 
 from math import *
 
@@ -77,6 +77,11 @@ class ScreenShootWindow(QGraphicsView):
 
         QShortcut(QKeySequence('ctrl+s'), self).activated.connect(self.saveScreenshot)
         QShortcut(QKeySequence('esc'), self).activated.connect(self.close)
+
+        self.succ_callback = None
+
+    def setSuccCallback(self, handler):
+        self.succ_callback = handler
 
     def closeEvent(self, event):
         self.tooBar.close()
@@ -454,6 +459,9 @@ class ScreenShootWindow(QGraphicsView):
             # It doesn't work here, I don't know why.
         else:
             image.save(fileName, picType, 10)
+
+        if self.succ_callback is not None:
+            self.succ_callback(image)
 
     def redraw(self):
         self.graphicsScene.clear()
