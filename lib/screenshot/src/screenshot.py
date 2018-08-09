@@ -461,7 +461,7 @@ class ScreenShootWindow(QGraphicsView):
             image.save(fileName, picType, 10)
 
         if self.succ_callback is not None:
-            self.succ_callback(image)
+            self.succ_callback(image, *selected.getRect())
 
     def redraw(self):
         self.graphicsScene.clear()

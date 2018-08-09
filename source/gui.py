@@ -21,6 +21,8 @@ from .highlighter import Highlighter
 
 import uuid
 
+EXPORT_PATH = '__export_res__'
+
 class Main(QtWidgets.QMainWindow):
 
     def __init__(self,parent=None):
@@ -539,17 +541,24 @@ class Main(QtWidgets.QMainWindow):
 
     def dump_script_text(self):
         result = ""
-        it = self.text.document().firstBlock().begin()
-        while not it.atEnd():
-            fragment = it.fragment()
-            charformat = fragment.charFormat()
-
-            if charformat.isImageFormat():
-                charformat = charformat.toImageFormat()
-                result += "{ img:'%s'}" % charformat.name()
-            else:
-                result += fragment.text()
-            it += 1
+        textblock = self.text.document().firstBlock()
+        
+        while textblock.isValid():
+            it = textblock.begin()
+            while not it.atEnd():
+                fragment = it.fragment()
+                charformat = fragment.charFormat()
+    
+                if charformat.isImageFormat():
+                    charformat = charformat.toImageFormat()
+                    result += "{ img:'%s'}" % charformat.name()
+                else:
+                    result += fragment.text()
+                print(fragment.text())
+                it += 1
+            result += '\n'
+            textblock = textblock.next()
+            
         return result
 
 
@@ -569,9 +578,11 @@ class Main(QtWidgets.QMainWindow):
             # We just store the contents of the text file along with the
             # format in html, which Qt does in a very nice way for us
             with open(self.filename,"wt", encoding='utf8') as file:
-                file.write( self.text.toPlainText() )
+                file.write( self.text.toHtml() )
 
-            with open(self.filename + '.py', "wt", encoding='utf8') as file:
+            pyname = self.filename.replace('.writer', '.py')
+
+            with open(pyname, "wt", encoding='utf8') as file:
                 file.write( self.dump_script_text() )
 
             self.changesSaved = True
@@ -642,15 +653,18 @@ class Main(QtWidgets.QMainWindow):
     def snapWindow(self):
         self.snap = ScreenShootWindow()
 
-        def _addImage(image):
+        def _addImage(image, top, left, width, height):
             if not image.isNull():
                 suffix = 'png'
-                name = str(uuid.uuid4()) + '.' + suffix
+                name = "%s/%s.%s" % (EXPORT_PATH, str(uuid.uuid4()), suffix)
 
                 image.save(name, suffix, 10)
 
                 cursor = self.text.textCursor()
                 cursor.insertImage(image, name)
+
+                # TODO convert it and save it
+                print('save image rect ', top, left, width, height)
 
         self.snap.setSuccCallback(_addImage)
         self.snap.show()
