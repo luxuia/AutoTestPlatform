@@ -8,9 +8,6 @@ from PyQt5 import QtWidgets
 #PYQT5 QMainWindow, QApplication, QAction, QFontComboBox, QSpinBox, QTextEdit, QMessageBox
 #PYQT5 QFileDialog, QColorDialog, QDialog
 
-from PyQt5 import QtPrintSupport
-#PYQT5 QPrintPreviewDialog, QPrintDialog
-
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import Qt
 
@@ -50,16 +47,6 @@ class Main(QtWidgets.QMainWindow):
         self.saveAction.setStatusTip("Save document")
         self.saveAction.setShortcut("Ctrl+S")
         self.saveAction.triggered.connect(self.save)
-
-        self.printAction = QtWidgets.QAction(QtGui.QIcon("icons/print.png"),"Print document",self)
-        self.printAction.setStatusTip("Print document")
-        self.printAction.setShortcut("Ctrl+P")
-        self.printAction.triggered.connect(self.printHandler)
-
-        self.previewAction = QtWidgets.QAction(QtGui.QIcon("icons/preview.png"),"Page view",self)
-        self.previewAction.setStatusTip("Preview page before printing")
-        self.previewAction.setShortcut("Ctrl+Shift+P")
-        self.previewAction.triggered.connect(self.preview)
 
         self.findAction = QtWidgets.QAction(QtGui.QIcon("icons/find.png"),"Find and replace",self)
         self.findAction.setStatusTip("Find and replace words in your document")
@@ -101,11 +88,6 @@ class Main(QtWidgets.QMainWindow):
         wordCountAction.setShortcut("Ctrl+W")
         wordCountAction.triggered.connect(self.wordCount)
 
-        tableAction = QtWidgets.QAction(QtGui.QIcon("icons/table.png"),"Insert table",self)
-        tableAction.setStatusTip("Insert table")
-        tableAction.setShortcut("Ctrl+T")
-        tableAction.triggered.connect(table.Table(self).show)
-
         imageAction = QtWidgets.QAction(QtGui.QIcon("icons/image.png"),"Insert image",self)
         imageAction.setStatusTip("Insert image")
         imageAction.setShortcut("Ctrl+Shift+I")
@@ -124,11 +106,6 @@ class Main(QtWidgets.QMainWindow):
 
         self.toolbar.addSeparator()
 
-        self.toolbar.addAction(self.printAction)
-        self.toolbar.addAction(self.previewAction)
-
-        self.toolbar.addSeparator()
-
         self.toolbar.addAction(self.cutAction)
         self.toolbar.addAction(self.copyAction)
         self.toolbar.addAction(self.pasteAction)
@@ -140,7 +117,6 @@ class Main(QtWidgets.QMainWindow):
         self.toolbar.addAction(self.findAction)
         self.toolbar.addAction(dateTimeAction)
         self.toolbar.addAction(wordCountAction)
-        self.toolbar.addAction(tableAction)
         self.toolbar.addAction(imageAction)
         self.toolbar.addAction(snapAction)
 
@@ -248,8 +224,6 @@ class Main(QtWidgets.QMainWindow):
         file.addAction(self.newAction)
         file.addAction(self.openAction)
         file.addAction(self.saveAction)
-        file.addAction(self.printAction)
-        file.addAction(self.previewAction)
 
         edit.addAction(self.undoAction)
         edit.addAction(self.redoAction)
@@ -301,6 +275,8 @@ class Main(QtWidgets.QMainWindow):
 
         self.highlighter = Highlighter(self.text.document())
 
+        self.snap = None
+
         self.setGeometry(100,100,1030,800)
         self.setWindowTitle("Writer")
         self.setWindowIcon(QtGui.QIcon("icons/icon.png"))
@@ -310,7 +286,7 @@ class Main(QtWidgets.QMainWindow):
 
     def closeEvent(self,event):
 
-        if self.changesSaved:
+        if self.changesSaved or self.text.toPlainText() == '':
 
             event.accept()
 
@@ -346,161 +322,9 @@ class Main(QtWidgets.QMainWindow):
         # Grab the cursor
         cursor = self.text.textCursor()
 
-        # Grab the current table, if there is one
-        table = cursor.currentTable()
+        event = QtGui.QContextMenuEvent(QtGui.QContextMenuEvent.Mouse,QtCore.QPoint())
 
-        # Above will return 0 if there is no current table, in which case
-        # we call the normal context menu. If there is a table, we create
-        # our own context menu specific to table interaction
-        if table:
-
-            menu = QtGui.QMenu(self)
-
-            appendRowAction = QtWidgets.QAction("Append row",self)
-            appendRowAction.triggered.connect(lambda: table.appendRows(1))
-
-            appendColAction = QtWidgets.QAction("Append column",self)
-            appendColAction.triggered.connect(lambda: table.appendColumns(1))
-
-
-            removeRowAction = QtWidgets.QAction("Remove row",self)
-            removeRowAction.triggered.connect(self.removeRow)
-
-            removeColAction = QtWidgets.QAction("Remove column",self)
-            removeColAction.triggered.connect(self.removeCol)
-
-
-            insertRowAction = QtWidgets.QAction("Insert row",self)
-            insertRowAction.triggered.connect(self.insertRow)
-
-            insertColAction = QtWidgets.QAction("Insert column",self)
-            insertColAction.triggered.connect(self.insertCol)
-
-
-            mergeAction = QtWidgets.QAction("Merge cells",self)
-            mergeAction.triggered.connect(lambda: table.mergeCells(cursor))
-
-            # Only allow merging if there is a selection
-            if not cursor.hasSelection():
-                mergeAction.setEnabled(False)
-
-
-            splitAction = QtWidgets.QAction("Split cells",self)
-
-            cell = table.cellAt(cursor)
-
-            # Only allow splitting if the current cell is larger
-            # than a normal cell
-            if cell.rowSpan() > 1 or cell.columnSpan() > 1:
-
-                splitAction.triggered.connect(lambda: table.splitCell(cell.row(),cell.column(),1,1))
-
-            else:
-                splitAction.setEnabled(False)
-
-
-            menu.addAction(appendRowAction)
-            menu.addAction(appendColAction)
-
-            menu.addSeparator()
-
-            menu.addAction(removeRowAction)
-            menu.addAction(removeColAction)
-
-            menu.addSeparator()
-
-            menu.addAction(insertRowAction)
-            menu.addAction(insertColAction)
-
-            menu.addSeparator()
-
-            menu.addAction(mergeAction)
-            menu.addAction(splitAction)
-
-            # Convert the widget coordinates into global coordinates
-            pos = self.mapToGlobal(pos)
-
-            # Add pixels for the tool and formatbars, which are not included
-            # in mapToGlobal(), but only if the two are currently visible and
-            # not toggled by the user
-
-            if self.toolbar.isVisible():
-                pos.setY(pos.y() + 45)
-
-            if self.formatbar.isVisible():
-                pos.setY(pos.y() + 45)
-
-            # Move the menu to the new position
-            menu.move(pos)
-
-            menu.show()
-
-        else:
-
-            event = QtGui.QContextMenuEvent(QtGui.QContextMenuEvent.Mouse,QtCore.QPoint())
-
-            self.text.contextMenuEvent(event)
-
-    def removeRow(self):
-
-        # Grab the cursor
-        cursor = self.text.textCursor()
-
-        # Grab the current table (we assume there is one, since
-        # this is checked before calling)
-        table = cursor.currentTable()
-
-        # Get the current cell
-        cell = table.cellAt(cursor)
-
-        # Delete the cell's row
-        table.removeRows(cell.row(),1)
-
-    def removeCol(self):
-
-        # Grab the cursor
-        cursor = self.text.textCursor()
-
-        # Grab the current table (we assume there is one, since
-        # this is checked before calling)
-        table = cursor.currentTable()
-
-        # Get the current cell
-        cell = table.cellAt(cursor)
-
-        # Delete the cell's column
-        table.removeColumns(cell.column(),1)
-
-    def insertRow(self):
-
-        # Grab the cursor
-        cursor = self.text.textCursor()
-
-        # Grab the current table (we assume there is one, since
-        # this is checked before calling)
-        table = cursor.currentTable()
-
-        # Get the current cell
-        cell = table.cellAt(cursor)
-
-        # Insert a new row at the cell's position
-        table.insertRows(cell.row(),1)
-
-    def insertCol(self):
-
-        # Grab the cursor
-        cursor = self.text.textCursor()
-
-        # Grab the current table (we assume there is one, since
-        # this is checked before calling)
-        table = cursor.currentTable()
-
-        # Get the current cell
-        cell = table.cellAt(cursor)
-
-        # Insert a new row at the cell's position
-        table.insertColumns(cell.column(),1)
-
+        self.text.contextMenuEvent(event)
 
     def toggleToolbar(self):
 
@@ -587,24 +411,6 @@ class Main(QtWidgets.QMainWindow):
 
             self.changesSaved = True
 
-    def preview(self):
-
-        # Open preview dialog
-        preview = QtPrintSupport.QPrintPreviewDialog()
-
-        # If a print is requested, open print dialog
-        preview.paintRequested.connect(lambda p: self.text.print_(p))
-
-        preview.exec_()
-
-    def printHandler(self):
-
-        # Open printing dialog
-        dialog = QtPrintSupport.QPrintDialog()
-
-        if dialog.exec_() == QtWidgets.QDialog.Accepted:
-            self.text.document().print_(dialog.printer())
-
     def cursorPosition(self):
 
         cursor = self.text.textCursor()
@@ -651,20 +457,42 @@ class Main(QtWidgets.QMainWindow):
                 cursor.insertImage(image,filename)
 
     def snapWindow(self):
+        self.save()
+
+        if self.snap is not None:
+            self.snap.destroy()
+
         self.snap = ScreenShootWindow()
 
-        def _addImage(image, top, left, width, height):
-            if not image.isNull():
-                suffix = 'png'
-                name = "%s/%s.%s" % (EXPORT_PATH, str(uuid.uuid4()), suffix)
+        def _addImage(background, foreground, top, left, width, height):
+            if not background.isNull():
+                path = self.filename.replace('.writer', '')
+                if not os.path.exists(path):
+                    os.mkdir(path)
 
-                image.save(name, suffix, 10)
+                suffix = 'png'
+                pathstr = "%s/%s.%s"
+                struuid = str(uuid.uuid4())
+                name = pathstr % (path, struuid, suffix)
+
+                for x, y in [(x, y) for x in range(background.width()) for y in range(background.height())]:
+                    color = foreground.pixel(x, y)
+                    # do mask if has color pixel
+                    if (color & 0xFFFFFF) > 1:
+                        background.setPixel(x, y, 0)
+
+                background.save(name, suffix, 10)
+
+                result = "top=%s\nleft=%s\nwidth=%s\nheight=%s\nname=%s" % (top, left, width, height, name)
+
+                with open(pathstr % (path, struuid, 'py'), "wt", encoding='utf8') as file:
+                    file.write(result)
+
+                background = background.scaledToHeight(80)
 
                 cursor = self.text.textCursor()
-                cursor.insertImage(image, name)
-
-                # TODO convert it and save it
-                print('save image rect ', top, left, width, height)
+                cursor.insertImage(background, name)
+                #cursor.insertImage(foreground, 'fore ' + name)
 
         self.snap.setSuccCallback(_addImage)
         self.snap.show()
