@@ -40,7 +40,7 @@ class Window():
             error('no handle pass')
         self.set_foreground()
 
-    def snapshot(self, filename = None)
+    def snapshot(self, filename = None):
         screen = screenshot(self.handle)
 
         if filename is not None:
@@ -98,11 +98,9 @@ class Window():
         pos = (int(pos[0], int(pos[1])))
         return pos
 
-    @require_app
     def set_foreground(self):
         SetForegroundWindow(self._top_window)
 
-    @require_app
     def get_rect(self):
         """
         Get rectangle

@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-from config.work import config
+from source.gui.gui import guimain
+from source.core.help import G
+from source.core.win.win import Window
+import sys
 
-import numpy as np
-import cv2
 
-from source.gui import main
 
 if __name__ == '__main__':
-    main()
+
+    G.DEVICE = Window(title='钉钉') 
+
+    guimain()
