@@ -1,1 +1,1 @@
-{ img:'E:/AutoTestPlatform/example/unit_test/1b5ff4bd-e94f-4088-b2b2-1b9d234cd8cf.png'}{ img:'E:/AutoTestPlatform/example/unit_test/8ed4ebbb-7b38-4183-9fdf-406899e23b28.png'}{ img:'fore E:/AutoTestPlatform/example/unit_test/8ed4ebbb-7b38-4183-9fdf-406899e23b28.png'}{ img:'E:/AutoTestPlatform/example/unit_test/f6fa98ee-ee37-4b97-a62d-a3d119b8f018.png'}
+{ img:'E:/AutoTestPlatform/example/unit_test/cd97a2f2-b4d6-478b-851f-d7e89fc43db0.png'}{ img:'E:/AutoTestPlatform/example/unit_test/6eb77096-2b09-4ab2-ad83-02ab23360c84.png'}
