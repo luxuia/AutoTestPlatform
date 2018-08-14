@@ -3,6 +3,7 @@ import sys, os
 import shutil
 import json
 import uuid
+import subprocess
 
 """
 uiautomate use multithread init, see 
@@ -20,7 +21,6 @@ from .ext import *
 from .screenshot.screenshot import ScreenShootWindow
 
 from source.core.help import G
-
 
 
 EXPORT_PATH = '__export_res__'
@@ -98,6 +98,11 @@ class Main(QtWidgets.QMainWindow):
         snapAction.setShortcut("Ctrl+Shift+S")
         snapAction.triggered.connect(self.snapWindow)
 
+        runAction = QtWidgets.QAction(QtGui.QIcon('icons/indent.png'), "Run Script", self)
+        runAction.setStatusTip("Run Script")
+        runAction.setShortcut('Ctrl+Shift+R')
+        runAction.triggered.connect(self.runScript)
+
         self.toolbar = self.addToolBar("Options")
 
         self.toolbar.addAction(self.newAction)
@@ -118,6 +123,7 @@ class Main(QtWidgets.QMainWindow):
         self.toolbar.addAction(dateTimeAction)
         self.toolbar.addAction(wordCountAction)
         self.toolbar.addAction(snapAction)
+        self.toolbar.addAction(runAction)
 
         self.addToolBarBreak()
 
@@ -272,7 +278,7 @@ class Main(QtWidgets.QMainWindow):
 
         self.text.textChanged.connect(self.changed)
 
-        self.highlighter = highlighter.Highlighter(self.text.document())
+        self.highlighter = pyhighlighter.PythonHighlighter(self.text.document())
 
         self.snap = None
 
@@ -352,7 +358,26 @@ class Main(QtWidgets.QMainWindow):
 
         spawn.show()
 
+
+
     def open(self):
+
+        import asyncio
+
+        @asyncio.coroutine
+        def compute(x, y):
+            print("Compute %s + %s ..." % (x, y))
+            yield from asyncio.sleep(10.0)
+            return x + y
+        
+        @asyncio.coroutine
+        def print_sum(x, y):
+            print('before print sum', x, y)
+            result = yield from compute(x, y)
+            print("%s + %s = %s" % (x, y, result))
+        
+        self.loop = asyncio.get_event_loop()
+        self.loop.call_soon(print_sum(1, 2), self.loop)
 
         # Get filename and show only .writer files
         #PYQT5 Returns a tuple in PyQt5, we only need the filename
@@ -363,7 +388,29 @@ class Main(QtWidgets.QMainWindow):
                 self.text.setText(file.read())
 
     def dump_script_text(self):
-        result = "from source.core.api import *"
+        result = """
+# We need the path to setup.py to be able to run
+# the setup from a different folder
+import os, sys
+def setup_path(path = ""):
+    # get the path to the setup file
+    setup_path = os.path.abspath(os.path.split(__file__)[0])
+
+    return os.path.join(setup_path, path)
+
+sys.path.insert(0, setup_path('..'))
+
+from source.core.api import *
+from source.core.cv import *
+from source.core.help import *
+from source.core.win.win import Window
+
+handle = sys.argv[1]
+G.DEVICE = Window(handle=handle) 
+
+
+"""
+        
         textblock = self.text.document().firstBlock()
         
         while textblock.isValid():
@@ -384,13 +431,16 @@ class Main(QtWidgets.QMainWindow):
             
         return result
 
-
     def save(self):
 
         # Only open dialog if there is no filename yet
         #PYQT5 Returns a tuple in PyQt5, we only need the filename
         if not self.filename:
           self.filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File')[0]
+
+        # 只能保存在项目目录下，保证python模块引用
+        if self.filename and not self.filename.startswith(G.ROOT_PATH):
+            return
 
         if self.filename:
 
@@ -460,7 +510,11 @@ class Main(QtWidgets.QMainWindow):
 
                 cursor.insertImage(image,filename)
 
+    async def wait_lonmg():
+        await asyncio.sleep(10)
+
     def snapWindow(self):
+
         G.DEVICE.set_foreground()
 
         if self.snap is not None:
@@ -500,7 +554,7 @@ class Main(QtWidgets.QMainWindow):
                     'name':struuid,
                 }
 
-                with open(pathstr % (path, struuid, 'meta'), "wt", encoding='utf8') as file:
+                with open(name + ".meta", "wt", encoding='utf8') as file:
                     file.write(json.dumps(metadic))
 
                 background = background.scaledToHeight(80)
@@ -511,6 +565,44 @@ class Main(QtWidgets.QMainWindow):
 
         self.snap.setSuccCallback(_addImage)
         self.snap.show()
+
+    def getPyModuleByfilename(self, filename):
+        print('try get pymodule by filename ' + filename)
+        filename = filename.replace("\\", "/")
+        if filename.startswith(G.ROOT_PATH):
+            filename = filename.replace(G.ROOT_PATH, '')
+            filename = filename.replace('/', '.')
+            filename.replace('.py', '')
+
+            if filename[0] == '.':
+                filename = filename[1:]
+
+            return filename
+
+    def getPyPathByfilename(self, filename):
+        filename = filename.replace("\\", "/")
+        if filename.startswith(G.ROOT_PATH):
+            filename = filename.replace(G.ROOT_PATH, '')
+
+            if filename.endswith('.writer'):
+                filename = filename.replace('.writer', '.py')
+
+            if filename[0] == '/' :
+                filename = filename[1:]
+
+            return filename
+
+    def runScript(self):
+        #import importlib
+        #modulepath = self.getPyModuleByfilename(self.filename)
+        #if modulepath is not None:
+        #    importlib.import_module(modulepath)
+
+        pypath = self.getPyPathByfilename(self.filename)
+
+        print('run script: python ', pypath)
+
+        subprocess.run("python {} {}".format(pypath, G.DEVICE.handle))
 
     def fontColorChanged(self):
 

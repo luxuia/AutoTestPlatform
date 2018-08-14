@@ -14,6 +14,7 @@ class Window():
 
         self.app = None
         self.handle = int(handle) if handle else None
+        self.title = title
 
         self._app = Application()
         self._top_window = None

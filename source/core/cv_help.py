@@ -31,6 +31,7 @@ def matchTemplate(image, template, method = cv.TM_SQDIFF):
 
 def matchTemplateMultiScale(image, template, method = cv.TM_SQDIFF, scale=3):
     #TODO
+    print('not impl')
 
 if __name__ == '__main__':
     image = cv.imread(UNIT_TEST_RES_PATH + 'game_frame.png', cv.IMREAD_UNCHANGED)

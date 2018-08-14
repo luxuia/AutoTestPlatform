@@ -1,1 +1,1 @@
-__all__ = ["find","datetime","wordcount","table", 'highlighter']
+__all__ = ["find","datetime","wordcount","table", 'highlighter', 'pyhighlighter']

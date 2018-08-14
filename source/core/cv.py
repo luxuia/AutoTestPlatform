@@ -1,6 +1,17 @@
 from .help import *
 from .cv_help import *
 import cv2 as cv
+from .help import G
+
+def loop_find(template, timeout=1, interval=0.5, intervalfunc=None):
+    while True:
+        screen = G.DEVICE.snapshot()
+
+        if screen is None:
+            print('screen is None')
+        else:
+            return template.match_in(screen)
+
 
 
 class Template(object):

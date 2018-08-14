@@ -10,6 +10,7 @@ class G(object):
 
 class Config(object):
     OP_DELAY = 0.5
+    FIND_TIMEOUT = 1
 
 
 class Res(object):
@@ -19,7 +20,7 @@ class Res(object):
             filename = filename + '.meta'
         with open(filename, 'r') as f:
             cfg = json.loads(f.read())
-            return json.loads(cfg)
+            return cfg
 
     @classmethod
     def get_image(cls, filename):
